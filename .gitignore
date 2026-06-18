@@ -1,3 +1,6 @@
+# 我自定义的忽略的文件如下，不要删除：
+doc/AAI_SecureOps_Hackathon_Brief.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
