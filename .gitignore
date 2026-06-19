@@ -2,6 +2,10 @@
 doc/AAI_SecureOps_Hackathon_Brief.pdf
 doc/ics-attack-v19.1.xlsx
 
+# 向量数据库及本地临时索引目录
+chroma_db/
+tests/temp_test_db/
+tests/temp_csaf/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
