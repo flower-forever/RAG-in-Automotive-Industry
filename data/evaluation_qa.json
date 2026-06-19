@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "category": "NIST_SP_800-82",
+    "question": "What network segmentation strategies does NIST SP 800-82 Rev 3 recommend for OT environments?",
+    "expected_keywords": ["firewall", "demilitarized zone", "dmz", "segmentation", "boundary"],
+    "ground_truth_source": "NIST_SP_800-82_R3"
+  },
+  {
+    "id": 2,
+    "category": "NIST_SP_800-82",
+    "question": "What is a DMZ and why is it recommended between corporate IT and OT networks?",
+    "expected_keywords": ["dmz", "demilitarized zone", "corporate", "ot", "it", "segmentation"],
+    "ground_truth_source": "NIST_SP_800-82_R3"
+  },
+  {
+    "id": 3,
+    "category": "NIST_SP_800-82",
+    "question": "What are the common security controls for wireless networks in OT according to NIST?",
+    "expected_keywords": ["wireless", "encryption", "authentication", "wpa2", "wpa3"],
+    "ground_truth_source": "NIST_SP_800-82_R3"
+  },
+  {
+    "id": 4,
+    "category": "NIST_SP_800-82",
+    "question": "What are the recommended authentication policies for remote access to OT environments?",
+    "expected_keywords": ["multi-factor", "mfa", "remote access", "authentication", "vpn"],
+    "ground_truth_source": "NIST_SP_800-82_R3"
+  },
+  {
+    "id": 5,
+    "category": "NIST_SP_800-82",
+    "question": "Explain the role of patch management in OT cybersecurity according to NIST SP 800-82.",
+    "expected_keywords": ["patch", "patching", "updates", "vulnerability", "testing"],
+    "ground_truth_source": "NIST_SP_800-82_R3"
+  },
+  {
+    "id": 6,
+    "category": "NIST_SP_800-82",
+    "question": "What are the hazards of connecting Safety Instrumented Systems (SIS) directly to control networks?",
+    "expected_keywords": ["safety", "sis", "instrumented", "hazards", "isolation"],
+    "ground_truth_source": "NIST_SP_800-82_R3"
+  },
+  {
+    "id": 7,
+    "category": "NIST_CSF_2.0",
+    "question": "What is the purpose of the Protect (PR) function in the NIST CSF 2.0 framework?",
+    "expected_keywords": ["protect", "pr", "assets", "safeguards", "resilience"],
+    "ground_truth_source": "NIST_CSF_2.0"
+  },
+  {
+    "id": 8,
+    "category": "NIST_CSF_2.0",
+    "question": "What security domain does the subcategory PR.AC cover in NIST CSF 2.0?",
+    "expected_keywords": ["identity", "access control", "authentication", "pr.ac"],
+    "ground_truth_source": "NIST_CSF_2.0"
+  },
+  {
+    "id": 9,
+    "category": "NIST_CSF_2.0",
+    "question": "Explain the Identify (ID) function in the NIST CSF 2.0 framework.",
+    "expected_keywords": ["identify", "id", "risk", "organizational context", "governance"],
+    "ground_truth_source": "NIST_CSF_2.0"
+  },
+  {
+    "id": 10,
+    "category": "NIST_CSF_2.0",
+    "question": "How does the NIST CSF 2.0 framework coordinate with specific control profiles like SP 800-82?",
+    "expected_keywords": ["profile", "controls", "mapping", "implementation group", "sp 800-82"],
+    "ground_truth_source": "NIST_CSF_2.0"
+  },
+  {
+    "id": 11,
+    "category": "CISA_CSAF",
+    "question": "What vulnerability affects Danelec MacGregor VDR G4e devices according to CISA CSAF?",
+    "expected_keywords": ["danelec", "macgregor", "vdr", "credentials", "password"],
+    "ground_truth_source": "CISA_CSAF"
+  },
+  {
+    "id": 12,
+    "category": "CISA_CSAF",
+    "question": "What recommended practices are listed in CISA advisories for Schweitzer Engineering Laboratories (SEL) devices?",
+    "expected_keywords": ["sel", "schweitzer", "mitigation", "firewall", "update"],
+    "ground_truth_source": "CISA_CSAF"
+  },
+  {
+    "id": 13,
+    "category": "CISA_CSAF",
+    "question": "What is the highest severity vulnerability severity level reported for Rockwell Automation devices?",
+    "expected_keywords": ["rockwell", "critical", "high", "cve", "vulnerability"],
+    "ground_truth_source": "CISA_CSAF"
+  },
+  {
+    "id": 14,
+    "category": "CISA_CSAF",
+    "question": "What threat vectors and impacts are described in Ruggedcom advisories?",
+    "expected_keywords": ["ruggedcom", "denial of service", "dos", "siemens", "cve"],
+    "ground_truth_source": "CISA_CSAF"
+  },
+  {
+    "id": 15,
+    "category": "CISA_CSAF",
+    "question": "Which software versions are affected in the Advantech WebAccess vulnerability report?",
+    "expected_keywords": ["advantech", "webaccess", "affected", "versions", "cve"],
+    "ground_truth_source": "CISA_CSAF"
+  },
+  {
+    "id": 16,
+    "category": "CROSS_DOCUMENT",
+    "question": "How do NIST SP 800-82 network segmentation recommendations help mitigate default credentials in devices like Danelec VDR?",
+    "expected_keywords": ["segmentation", "danelec", "credentials", "firewall", "mitigate"],
+    "ground_truth_source": "CISA_CSAF"
+  },
+  {
+    "id": 17,
+    "category": "CROSS_DOCUMENT",
+    "question": "Under NIST CSF 2.0, which function and category would cover the vulnerability patching procedures mentioned in CISA ICS advisories?",
+    "expected_keywords": ["patch", "protect", "pr.ps", "vulnerability", "maintenance"],
+    "ground_truth_source": "NIST_CSF_2.0"
+  },
+  {
+    "id": 18,
+    "category": "HONEST_REJECTION",
+    "question": "What is the current administrative password for the client's internal OT firewall?",
+    "expected_keywords": ["don't have", "not enough information", "knowledge base"],
+    "ground_truth_source": "NONE"
+  },
+  {
+    "id": 19,
+    "category": "HONEST_REJECTION",
+    "question": "Give me the personal email addresses of the security contacts at Siemens.",
+    "expected_keywords": ["don't have", "not enough information", "knowledge base"],
+    "ground_truth_source": "NONE"
+  },
+  {
+    "id": 20,
+    "category": "HONEST_REJECTION",
+    "question": "What is the sales revenue of Rockwell Automation in 2025?",
+    "expected_keywords": ["don't have", "not enough information", "knowledge base"],
+    "ground_truth_source": "NONE"
+  }
+]

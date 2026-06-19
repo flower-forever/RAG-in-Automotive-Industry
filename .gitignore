@@ -1,7 +1,7 @@
 # 我自定义的忽略的文件如下，不要删除：
 doc/AAI_SecureOps_Hackathon_Brief.pdf
 doc/ics-attack-v19.1.xlsx
-
+evaluation_report.md
 # 向量数据库及本地临时索引目录
 chroma_db/
 tests/temp_test_db/
