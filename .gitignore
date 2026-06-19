@@ -1,5 +1,7 @@
 # 我自定义的忽略的文件如下，不要删除：
 doc/AAI_SecureOps_Hackathon_Brief.pdf
+doc/ics-attack-v19.1.xlsx
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
