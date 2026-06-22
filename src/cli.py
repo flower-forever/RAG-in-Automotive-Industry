@@ -131,51 +131,27 @@ class SecureOpsCLI(cmd.Cmd):
         
         print(f"\n{COLOR_CYAN}Retrieving context chunks...{COLOR_RESET}")
         try:
-            # 1. Generate rewrite candidates and perform retrieval for each candidate.
-            #    We will pick the candidate with the highest top rerank_score (or score) as best.
+            # 1. Generate rewrite candidates and extract just the text.
             candidates = rewrite_query(query)
-            # Ensure the original query is among candidates (as fallback)
-            orig_present = any(c["text"].strip().lower() == query.strip().lower() for c in candidates)
-            if not orig_present:
-                candidates.insert(0, {"type": "original", "text": query})
+            queries_list = [query] # Ensure the original query is always first
+            for c in candidates:
+                qtext = c["text"].strip()
+                if qtext.lower() != query.lower() and qtext not in queries_list:
+                    queries_list.append(qtext)
 
-            candidate_results = []
-            with ThreadPoolExecutor(max_workers=min(6, len(candidates))) as executor:
-                future_to_candidate = {}
-                for c in candidates:
-                    qtext = c["text"]
-                    future = executor.submit(
-                        self.retriever.retrieve,
-                        query=qtext,
-                        k=5,
-                        vendor=self.filters["vendor"],
-                        severity=self.filters["severity"],
-                        source=self.filters["source"]
-                    )
-                    future_to_candidate[future] = (c, qtext)
+            # Pass the entire list to the multi-query retriever
+            retrieved = self.retriever.retrieve(
+                query_or_queries=queries_list,
+                k=5,
+                vendor=self.filters["vendor"],
+                severity=self.filters["severity"],
+                source=self.filters["source"]
+            )
 
-                for future in as_completed(future_to_candidate):
-                    c, qtext = future_to_candidate[future]
-                    try:
-                        res = future.result()
-                    except Exception:
-                        res = []
-                    top_score = 0.0
-                    if res:
-                        top_score = float(res[0].get("rerank_score", res[0].get("score", 0.0)))
-                    candidate_results.append({"candidate": c, "query": qtext, "retrieved": res, "top_score": top_score})
-
-            # Choose best candidate by top_score (reranker score) — fallback to original if none better.
-            best = max(candidate_results, key=lambda x: x["top_score"]) if candidate_results else None
-            if best is None:
-                retrieved = []
-            else:
-                retrieved = best["retrieved"]
-
-            # 2. Generate answer using best candidate's retrieval
+            # 2. Generate answer using retrieved results from multiple queries
             print(f"{COLOR_CYAN}Generating response via LLM...{COLOR_RESET}\n")
             answer, confidence, cited = self.generator.generate_answer(
-                query=(best["query"] if best else query),
+                query=query,
                 retrieved_chunks=retrieved
             )
             
@@ -206,20 +182,10 @@ class SecureOpsCLI(cmd.Cmd):
                         print(f"   Chapter: {meta.get('chapter', 'N/A')} | Section: {meta.get('section', 'N/A')} | Page(s): {meta.get('page_start', '?')}-{meta.get('page_end', '?')}")
             else:
                 print(f"\n{COLOR_YELLOW}No sources were explicitly cited for this answer.{COLOR_RESET}")
-            # Print which rewrite candidate was used (if available)
-            try:
-                if best and best.get("candidate"):
-                    c = best["candidate"]
-                    print(f"\n{COLOR_BOLD}{COLOR_WHITE}Rewrite Used:{COLOR_RESET} ({c['type']}) {best['query']}")
-                    # also print top scores of other candidates for debugging
-                    print(f"{COLOR_BOLD}{COLOR_WHITE}Candidate Scores:{COLOR_RESET}")
-                    for cr in candidate_results:
-                        t = cr["candidate"]["type"]
-                        q = cr["query"]
-                        s = cr["top_score"]
-                        print(f"  - {t}: score={s:.4f} | {q}")
-            except Exception:
-                pass
+                
+            print(f"\n{COLOR_BOLD}{COLOR_WHITE}Queries Used (Expanded):{COLOR_RESET}")
+            for i, q in enumerate(queries_list, start=1):
+                print(f"  {i}. {q}")
             print()
             
         except Exception as e:

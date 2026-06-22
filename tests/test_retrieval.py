@@ -114,3 +114,17 @@ def test_metadata_filtering(retriever):
     results = retriever.retrieve("OT security", k=5, source="NIST_CSF_2.0")
     for r in results:
         assert r["metadata"]["source"] == "NIST_CSF_2.0"
+
+def test_multi_query_retrieve(retriever):
+    """Verify that retrieval accepts a list of queries, pools them, and returns properly reranked results."""
+    queries = [
+        "How to protect OT remote access?",
+        "What are ICS remote connectivity guidelines?"
+    ]
+    results = retriever.retrieve(queries, k=3)
+    assert len(results) > 0
+    assert len(results) <= 3
+    assert "rerank_score" in results[0]
+    # Verify that results are sorted in descending order of rerank score
+    scores = [r["rerank_score"] for r in results]
+    assert scores == sorted(scores, reverse=True)

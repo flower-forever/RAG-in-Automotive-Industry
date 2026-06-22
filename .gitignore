@@ -2,6 +2,7 @@
 doc/AAI_SecureOps_Hackathon_Brief.pdf
 doc/ics-attack-v19.1.xlsx
 evaluation_report.md
+doc/rag_critique_analysis.md
 # 向量数据库及本地临时索引目录
 chroma_db/
 tests/temp_test_db/

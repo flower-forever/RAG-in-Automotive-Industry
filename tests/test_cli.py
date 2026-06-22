@@ -2,7 +2,7 @@ import os
 import re
 import pickle
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, ANY
 from src.cli import SecureOpsCLI
 
 def strip_ansi(text: str) -> str:
@@ -170,7 +170,7 @@ def test_cli_ask_flow(mock_ensure, mock_cli, capsys):
     
     # Verify mock calls
     mock_cli.retriever.retrieve.assert_called_once_with(
-        query="What is the Danelec vulnerability?",
+        query_or_queries=ANY,
         k=5,
         vendor=None,
         severity=None,

@@ -1,7 +1,7 @@
 import os
 import re
 import pickle
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 import chromadb
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from src.indexing import tokenize_text, get_torch_device
@@ -146,24 +146,18 @@ class SecureOpsRetriever:
         sparse_hits.sort(key=lambda x: x["score"], reverse=True)
         return sparse_hits[:top_k]
 
-    def reciprocal_rank_fusion(self, dense_hits: List[Dict[str, Any]], sparse_hits: List[Dict[str, Any]], rrf_k: int = 60) -> List[Dict[str, Any]]:
+    def reciprocal_rank_fusion(self, *hit_lists: List[Dict[str, Any]], rrf_k: int = 60) -> List[Dict[str, Any]]:
         """
-        Fuse dense and sparse rankings using Reciprocal Rank Fusion (RRF).
+        Fuse multiple ranked lists using Reciprocal Rank Fusion (RRF).
         """
         rrf_scores = {}
         doc_details = {}
         
-        # Process dense hits
-        for rank, hit in enumerate(dense_hits):
-            doc_id = hit["id"]
-            rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + (1.0 / (rrf_k + rank + 1))
-            doc_details[doc_id] = (hit["text"], hit["metadata"])
-            
-        # Process sparse hits
-        for rank, hit in enumerate(sparse_hits):
-            doc_id = hit["id"]
-            rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + (1.0 / (rrf_k + rank + 1))
-            doc_details[doc_id] = (hit["text"], hit["metadata"])
+        for hits in hit_lists:
+            for rank, hit in enumerate(hits):
+                doc_id = hit["id"]
+                rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + (1.0 / (rrf_k + rank + 1))
+                doc_details[doc_id] = (hit["text"], hit["metadata"])
             
         # Compile and sort fused results
         fused_hits = []
@@ -181,7 +175,7 @@ class SecureOpsRetriever:
 
     def retrieve(
         self,
-        query: str,
+        query_or_queries: Union[str, List[str]],
         k: int = 5,
         dense_ratio: float = 0.7,
         vendor: Optional[str] = None,
@@ -197,13 +191,21 @@ class SecureOpsRetriever:
         4. Cross-Encoder Reranking
         Returns top k chunks.
         """
-        # Step 1: Perform Dense and Sparse retrieval
-        dense_hits = self.dense_search(query, top_k=top_n_candidates, vendor=vendor, severity=severity, source=source)
-        sparse_hits = self.sparse_search(query, top_k=top_n_candidates, vendor=vendor, severity=severity, source=source)
+        if isinstance(query_or_queries, str):
+            queries = [query_or_queries]
+        else:
+            queries = query_or_queries
+
+        # Step 1: Perform Dense and Sparse retrieval for all queries
+        all_hit_lists = []
+        for q in queries:
+            dense_hits = self.dense_search(q, top_k=top_n_candidates, vendor=vendor, severity=severity, source=source)
+            sparse_hits = self.sparse_search(q, top_k=top_n_candidates, vendor=vendor, severity=severity, source=source)
+            all_hit_lists.extend([dense_hits, sparse_hits])
         
         # Step 2: reciprocal rank fusion (RRF)
         # We set rrf_k to 60 as recommended in literature
-        fused_hits = self.reciprocal_rank_fusion(dense_hits, sparse_hits, rrf_k=60)
+        fused_hits = self.reciprocal_rank_fusion(*all_hit_lists, rrf_k=60)
         
         # If no hits found at all, return empty
         if not fused_hits:
@@ -213,7 +215,8 @@ class SecureOpsRetriever:
         # Limit candidates for reranking to improve latency
         candidates = fused_hits[:top_n_candidates]
         
-        candidate_pairs = [(query, hit["text"]) for hit in candidates]
+        primary_query = queries[0]
+        candidate_pairs = [(primary_query, hit["text"]) for hit in candidates]
         rerank_scores = self.reranker.predict(candidate_pairs)
         
         # Attach cross-encoder scores and sort
