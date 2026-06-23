@@ -150,38 +150,75 @@ class SecureOpsCLI(cmd.Cmd):
 
             # 2. Generate answer using retrieved results from multiple queries
             print(f"{COLOR_CYAN}Generating response via LLM...{COLOR_RESET}\n")
-            answer, confidence, cited = self.generator.generate_answer(
-                query=query,
-                retrieved_chunks=retrieved
-            )
-            
-            # 3. Print answer
             print(f"{COLOR_BOLD}{COLOR_WHITE}Question:{COLOR_RESET} {query}")
-            print(f"{COLOR_BOLD}{COLOR_WHITE}Answer:{COLOR_RESET}\n{answer}\n")
+            print(f"{COLOR_BOLD}{COLOR_WHITE}Answer:{COLOR_RESET}")
             
-            # 4. Print confidence metrics
-            conf_percent = confidence * 100
-            if confidence >= 0.7:
-                conf_color = COLOR_GREEN
-            elif confidence >= 0.3:
-                conf_color = COLOR_YELLOW
-            else:
-                conf_color = COLOR_RED
-            print(f"{COLOR_BOLD}{COLOR_WHITE}Retrieval Confidence:{COLOR_RESET} {conf_color}{conf_percent:.1f}%{COLOR_RESET}")
+            import sys
+            import json
             
-            # 5. Print cited sources details
-            if cited:
-                print(f"\n{COLOR_BOLD}{COLOR_WHITE}Sources Details:{COLOR_RESET}")
-                for idx, chunk in enumerate(cited):
-                    meta = chunk.get("metadata", {})
-                    source = meta.get("source", "Unknown")
-                    print(f" {COLOR_GRAY}- [{idx+1}] Source: {source}{COLOR_RESET}")
-                    if source == "CISA_CSAF":
-                        print(f"   Advisory ID: {meta.get('advisory_id', 'N/A')} | Vendor: {meta.get('vendor', 'N/A')} | Severity: {meta.get('severity', 'N/A')}")
+            full_text = ""
+            confidence = 0.0
+            cited_sources = []
+            
+            for chunk in self.generator.generate_answer_stream(query, retrieved):
+                if "__EXPANDED_QUERIES__:" in chunk:
+                    continue
+                
+                if "__CRITIQUE_FAIL__" in chunk:
+                    # Clear screen to "retract" the answer
+                    os.system("cls" if os.name == "nt" else "clear")
+                    print(ASCII_BANNER)
+                    print(f"\n{COLOR_CYAN}Retrieving context chunks...{COLOR_RESET}")
+                    print(f"{COLOR_CYAN}Generating response via LLM...{COLOR_RESET}\n")
+                    print(f"{COLOR_BOLD}{COLOR_WHITE}Question:{COLOR_RESET} {query}")
+                    print(f"{COLOR_BOLD}{COLOR_WHITE}Answer:{COLOR_RESET}\nI don't have enough information in my knowledge base to answer this.\n")
+                    # Break to skip metadata rendering
+                    break
+                    
+                if "__METADATA__:" in chunk:
+                    meta_str = chunk.split("__METADATA__:")[1]
+                    try:
+                        meta = json.loads(meta_str)
+                        confidence = meta.get("confidence", 0.0)
+                        cited_sources = meta.get("cited", [])
+                    except Exception:
+                        pass
+                    
+                    print("\n")
+                    # 4. Print confidence metrics
+                    conf_percent = confidence * 100
+                    if confidence >= 0.7:
+                        conf_color = COLOR_GREEN
+                    elif confidence >= 0.3:
+                        conf_color = COLOR_YELLOW
                     else:
-                        print(f"   Chapter: {meta.get('chapter', 'N/A')} | Section: {meta.get('section', 'N/A')} | Page(s): {meta.get('page_start', '?')}-{meta.get('page_end', '?')}")
-            else:
-                print(f"\n{COLOR_YELLOW}No sources were explicitly cited for this answer.{COLOR_RESET}")
+                        conf_color = COLOR_RED
+                    print(f"{COLOR_BOLD}{COLOR_WHITE}Retrieval Confidence:{COLOR_RESET} {conf_color}{conf_percent:.1f}%{COLOR_RESET}")
+                    
+                    # 5. Print cited sources details
+                    if cited_sources:
+                        print(f"\n{COLOR_BOLD}{COLOR_WHITE}Sources Details:{COLOR_RESET}")
+                        for i, src in enumerate(cited_sources):
+                            print(f" {COLOR_GRAY}- [{src['index']}] Source: {src['source']}{COLOR_RESET}")
+                    else:
+                        print(f"\n{COLOR_YELLOW}No sources were explicitly cited for this answer.{COLOR_RESET}")
+                    break
+                
+                # Standard text chunk
+                # We could colorize <thinking> here, but for simplicity we just stream it in gray if it's within tags
+                full_text += chunk
+                
+                # Very basic streaming color change for CLI
+                if "<thinking>" in chunk:
+                    sys.stdout.write(COLOR_GRAY + chunk)
+                elif "</thinking>" in chunk:
+                    sys.stdout.write(chunk + COLOR_RESET)
+                else:
+                    if "<thinking>" in full_text and "</thinking>" not in full_text:
+                        sys.stdout.write(COLOR_GRAY + chunk + COLOR_RESET)
+                    else:
+                        sys.stdout.write(chunk)
+                sys.stdout.flush()
                 
             print(f"\n{COLOR_BOLD}{COLOR_WHITE}Queries Used (Expanded):{COLOR_RESET}")
             for i, q in enumerate(queries_list, start=1):
