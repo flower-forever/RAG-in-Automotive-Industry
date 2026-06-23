@@ -181,8 +181,7 @@ class SecureOpsRetriever:
         vendor: Optional[str] = None,
         severity: Optional[str] = None,
         source: Optional[str] = None,
-        top_n_candidates: int = 20,
-        max_chunks_per_doc: int = 1
+        top_n_candidates: int = 20
     ) -> List[Dict[str, Any]]:
         """
         Modular retrieval entry point:
@@ -190,7 +189,6 @@ class SecureOpsRetriever:
         2. Sparse retrieval (BM25)
         3. Reciprocal Rank Fusion (RRF)
         4. Cross-Encoder Reranking
-        5. Diversity Filtering (Max Chunks Per Doc)
         Returns top k chunks.
         """
         if isinstance(query_or_queries, str):
@@ -227,23 +225,5 @@ class SecureOpsRetriever:
             
         candidates.sort(key=lambda x: x["rerank_score"], reverse=True)
         
-        # Step 4: Diversity filtering
-        diverse_candidates = []
-        doc_counts = {}
-        
-        for hit in candidates:
-            # Try to group by advisory_id, fallback to chunk id prefix if not available
-            doc_id = hit["metadata"].get("advisory_id")
-            if not doc_id:
-                # Fallback to base id prefix before the underscore e.g. icsa-26-029-02.json_12 -> icsa-26-029-02.json
-                doc_id = hit["id"].rsplit("_", 1)[0]
-                
-            doc_counts[doc_id] = doc_counts.get(doc_id, 0) + 1
-            if doc_counts[doc_id] <= max_chunks_per_doc:
-                diverse_candidates.append(hit)
-                
-            if len(diverse_candidates) >= k:
-                break
-                
-        # Return top k diverse chunks
-        return diverse_candidates
+        # Return top k chunks
+        return candidates[:k]

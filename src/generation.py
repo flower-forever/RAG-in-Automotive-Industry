@@ -47,8 +47,8 @@ class SecureOpsGenerator:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = "deepseek-chat",
-        low_confidence_threshold: float = -3.0
+        model_name: str = "deepseek-v4-flash",
+        low_confidence_threshold: float = 0.0  # Cross-Encoder ms-marco-MiniLM logit threshold; scores below 0.0 indicate poor relevance and trigger honest refusal
     ):
         self.api_key = api_key or os.environ.get("DEEPSEEK_API_KEY")
         self.model_name = model_name

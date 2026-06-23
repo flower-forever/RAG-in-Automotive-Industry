@@ -76,7 +76,7 @@ def run_evaluation(
     generator = SecureOpsGenerator()
     
     has_api_key = generator._has_client
-    print(f"Gemini API Configured: {'Yes (Live generation evaluation enabled)' if has_api_key else 'No (Retrieval-only evaluation enabled)'}")
+    print(f"DeepSeek API Configured: {'Yes (Live generation evaluation enabled)' if has_api_key else 'No (Retrieval-only evaluation enabled - set DEEPSEEK_API_KEY to enable full eval)'}")
     
     results = []
     
@@ -104,11 +104,11 @@ def run_evaluation(
         
         print(f"\n[{qid}/{len(qa_pairs)}] Category: {category} | Evaluating: '{query}'")
         
-        # 1. Run Naive Retrieval (Pure Dense Search, top 5)
-        naive_chunks = retriever.dense_search(query, top_k=5)
+        # 1. Run Naive Retrieval (Pure Dense Search, top 10)
+        naive_chunks = retriever.dense_search(query, top_k=10)
         
-        # 2. Run Hybrid Retrieval (Dense + BM25 + RRF + Cross-Encoder Reranker, top 5)
-        hybrid_chunks = retriever.retrieve(query, k=5)
+        # 2. Run Hybrid Retrieval (Dense + BM25 + RRF + Cross-Encoder Reranker, top 10)
+        hybrid_chunks = retriever.retrieve(query, k=10)
         
         # Check retrieval hits (is expected source in retrieved sources?)
         naive_hit = False
@@ -124,7 +124,7 @@ def run_evaluation(
                 hybrid_hits += 1
 
         # Compute ranking metrics for this query
-        k = 5
+        k = 10
         if expected_source != "NONE":
             naive_p = precision_at_k(naive_chunks, expected_source, k)
             hybrid_p = precision_at_k(hybrid_chunks, expected_source, k)
@@ -252,9 +252,9 @@ def run_evaluation(
     report.append(f"| **Retrieval Hit Rate** | {naive_hit_rate:.1f}% | {hybrid_hit_rate:.1f}% | +{hybrid_hit_rate - naive_hit_rate:.1f}% |")
     report.append(f"| **Keyword Factual Coverage** | {avg_naive_cov:.1f}% | {avg_hybrid_cov:.1f}% | +{avg_hybrid_cov - avg_naive_cov:.1f}% |")
     report.append(f"| **Honest Rejection Accuracy** | {naive_rejection_acc:.1f}% | {hybrid_rejection_acc:.1f}% | +{hybrid_rejection_acc - naive_rejection_acc:.1f}% |")
-    report.append(f"| **Precision@5** | {avg_naive_prec:.1f}% | {avg_hybrid_prec:.1f}% | +{avg_hybrid_prec - avg_naive_prec:.1f}% |")
-    report.append(f"| **MRR@5** | {avg_naive_mrr:.3f} | {avg_hybrid_mrr:.3f} | +{avg_hybrid_mrr - avg_naive_mrr:.3f} |")
-    report.append(f"| **nDCG@5** | {avg_naive_ndcg:.3f} | {avg_hybrid_ndcg:.3f} | +{avg_hybrid_ndcg - avg_naive_ndcg:.3f} |")
+    report.append(f"| **Precision@10** | {avg_naive_prec:.1f}% | {avg_hybrid_prec:.1f}% | +{avg_hybrid_prec - avg_naive_prec:.1f}% |")
+    report.append(f"| **MRR@10** | {avg_naive_mrr:.3f} | {avg_hybrid_mrr:.3f} | +{avg_hybrid_mrr - avg_naive_mrr:.3f} |")
+    report.append(f"| **nDCG@10** | {avg_naive_ndcg:.3f} | {avg_hybrid_ndcg:.3f} | +{avg_hybrid_ndcg - avg_naive_ndcg:.3f} |")
     
     report.append("\n## 📝 Detailed Evaluation Results")
     report.append("\n| ID | Category | Question | Expected Source | Naive Hit? | Hybrid Hit? | Naive Cover | Hybrid Cover | Rejection (N/H)? |")
@@ -286,9 +286,9 @@ def run_evaluation(
     print(f"Retrieval Hit Rate:     Naive: {naive_hit_rate:.1f}%  |  Hybrid: {hybrid_hit_rate:.1f}%")
     print(f"Keyword Coverage:       Naive: {avg_naive_cov:.1f}%  |  Hybrid: {avg_hybrid_cov:.1f}%")
     print(f"Honest Rejection Acc:   Naive: {naive_rejection_acc:.1f}%  |  Hybrid: {hybrid_rejection_acc:.1f}%")
-    print(f"Precision@5:            Naive: {avg_naive_prec:.1f}%  |  Hybrid: {avg_hybrid_prec:.1f}%")
-    print(f"MRR@5:                  Naive: {avg_naive_mrr:.3f}  |  Hybrid: {avg_hybrid_mrr:.3f}")
-    print(f"nDCG@5:                 Naive: {avg_naive_ndcg:.3f}  |  Hybrid: {avg_hybrid_ndcg:.3f}")
+    print(f"Precision@10:            Naive: {avg_naive_prec:.1f}%  |  Hybrid: {avg_hybrid_prec:.1f}%")
+    print(f"MRR@10:                  Naive: {avg_naive_mrr:.3f}  |  Hybrid: {avg_hybrid_mrr:.3f}")
+    print(f"nDCG@10:                 Naive: {avg_naive_ndcg:.3f}  |  Hybrid: {avg_hybrid_ndcg:.3f}")
     print("=======================================================")
 
 if __name__ == "__main__":
